@@ -19,6 +19,7 @@ https://github.com/SKTBrain/KoBERT#how-to-install
     cd movie-sentiment-analysis-kobert
     python3 movie_sentiment_analysis.py
     ```
+    * It takes 36 minutes for each training epoch on an NVIDIA GeForce GTX 1070.
 
 * Performance
-    * Accuracy 89.0% [(KoBERT fine-tuning: 90.1%)](https://github.com/SKTBrain/KoBERT#fine-tuning-performances)
+    * Accuracy 89.6% (5th epoch) [(KoBERT fine-tuning: 90.1%)](https://github.com/SKTBrain/KoBERT#fine-tuning-performances)

@@ -43,7 +43,8 @@ def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
         pred = output.argmax(dim=1, keepdim=True)
         correct = pred.eq(target.view_as(pred)).sum().item()
 
-        if batch_idx > 0 and batch_idx % log_interval == 0:
+        if (batch_idx + 1) % log_interval == 0 \
+                or batch_idx == len(train_loader) - 1:
             batch_len = len(input_ids)
             lr = ''
             for param_group in optimizer.param_groups:
@@ -51,11 +52,11 @@ def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
                     lr = param_group['lr']
                     break
             print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'
-                  '\tAccuracy: {}/{} ({:.2f}%)\tlr: {}'.format(
+                  '\tAccuracy: {}/{} ({:.2f}%)\tlr: {:.3e}'.format(
                     datetime.now(),
-                    epoch, batch_idx * batch_len,
+                    epoch, (batch_idx + 1) * batch_len,
                     len(train_loader.dataset),
-                    100. * batch_idx / len(train_loader), loss.item(),
+                    100. * (batch_idx + 1) / len(train_loader), loss.item(),
                     correct, batch_len, 100. * correct / batch_len,
                     lr))
 
@@ -119,11 +120,11 @@ def batchify(b):
             e0_mask.append(0)
         assert len(e[0]) == batch_max_len
 
-        e0_tk_type_ids = [0] * batch_max_len
-        e0_tk_type_ids[seq_len - 1] = 1
+        e0_tk_type_ids = [0] * batch_max_len  #
+        # e0_tk_type_ids[seq_len - 1] = 1
 
         x.append(e[0])
-        tk_type_ids.append(e0_tk_type_ids)  #
+        tk_type_ids.append(e0_tk_type_ids)
         x_mask.append(e0_mask)
         y.append(e[1])
 
@@ -221,6 +222,7 @@ def main():
     for epoch in range(epochs):
         train(train_loader, device, model, linear, all_params,
               optimizer, scheduler, max_grad_norm, log_interval, epoch)
+        print(datetime.now(), 'Testing...')
         test(test_loader, device, model, linear)
 
 
