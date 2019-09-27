@@ -113,9 +113,9 @@ def batchify(b):
     y = list()
     for e in b:
         seq_len = len(e[0])
-        e0_mask = [1] * seq_len
+        e0_mask = [1] * seq_len  # 1: MASK
         while len(e[0]) < batch_max_len:
-            e[0].append(0)
+            e[0].append(0)  # 0: '[PAD]'
             e0_mask.append(0)
         assert len(e[0]) == batch_max_len
 
@@ -147,8 +147,14 @@ def get_data(filepath, vocab, sp):
             doc = cols[1]
             label = cols[2]
 
-            token_ids = [vocab[t] if t in vocab
-                         else vocab['[UNK]'] for t in sp(doc)]
+            token_ids = list()
+            token_ids.append(vocab['[CLS]'])
+            for t in sp(doc):
+                if t in vocab:
+                    token_ids.append(vocab[t])
+                else:
+                    token_ids.append(vocab['[UNK]'])
+            token_ids.append(vocab['[SEP]'])
 
             data.append([token_ids, int(label)])
 
