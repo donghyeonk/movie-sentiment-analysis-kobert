@@ -12,7 +12,7 @@ https://github.com/SKTBrain/KoBERT#how-to-install
     ```
     git clone https://github.com/e9t/nsmc.git
     ```
-* Set nsmc_home_dir in main() to your nsmc dir
+* Set __nsmc_home_dir__ in __main()__ to your nsmc dir
 
 * Run
     ```
