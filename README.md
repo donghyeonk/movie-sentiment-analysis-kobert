@@ -12,11 +12,11 @@ https://github.com/SKTBrain/KoBERT#how-to-install
     ```
     git clone https://github.com/e9t/nsmc.git
     ```
-* Set nsmc_home_dir in main() to your nsmc dir
+* Set __nsmc_home_dir__ in __main()__ of __movie_sentiment_analysis.py__ to your nsmc dir
 
 * Run
     ```
-    cd KoBERT
+    cd movie-sentiment-analysis-kobert
     python3 movie_sentiment_analysis.py
     ```
 
