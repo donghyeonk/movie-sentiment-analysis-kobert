@@ -16,7 +16,7 @@ https://github.com/SKTBrain/KoBERT#how-to-install
 
 * Run
     ```
-    cd KoBERT
+    cd movie-sentiment-analysis-kobert
     python3 movie_sentiment_analysis.py
     ```
 
