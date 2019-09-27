@@ -43,14 +43,21 @@ def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
         pred = output.argmax(dim=1, keepdim=True)
         correct = pred.eq(target.view_as(pred)).sum().item()
 
-        if batch_idx % log_interval == 0:
+        if batch_idx > 0 and batch_idx % log_interval == 0:
             batch_len = len(input_ids)
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'
-                  '\tAccuracy: {}/{} ({:.2f}%)'.format(
+            lr = ''
+            for param_group in optimizer.param_groups:
+                if 'lr' in param_group:
+                    lr = param_group['lr']
+                    break
+            print('{}\tTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'
+                  '\tAccuracy: {}/{} ({:.2f}%)\tlr: {}'.format(
+                    datetime.now(),
                     epoch, batch_idx * batch_len,
                     len(train_loader.dataset),
                     100. * batch_idx / len(train_loader), loss.item(),
-                    correct, batch_len, 100. * correct / batch_len))
+                    correct, batch_len, 100. * correct / batch_len,
+                    lr))
 
 
 def test(test_loader, device, model, linear):
@@ -77,11 +84,12 @@ def test(test_loader, device, model, linear):
 
     eval_loss /= len(test_loader.dataset)
     acc = correct / len(test_loader.dataset)
-    print('{} Test, Avg. Loss: {:.6f}, '
-          'Accuracy: {}/{} ({:.2f}%)'.format(datetime.now() - start_t,
-                                             eval_loss,
-                                             correct, len(test_loader.dataset),
-                                             100. * acc))
+    print('Elapsed time: {}, Test, Avg. Loss: {:.6f}, '
+          'Accuracy: {}/{} ({:.2f}%)\n'.format(datetime.now() - start_t,
+                                               eval_loss,
+                                               correct,
+                                               len(test_loader.dataset),
+                                               100. * acc))
 
 
 class MovieDataset(Dataset):
