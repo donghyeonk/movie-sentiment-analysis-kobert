@@ -18,7 +18,7 @@ from pytorch_transformers import AdamW, WarmupLinearSchedule
 # https://github.com/huggingface/pytorch-transformers#optimizers-bertadam--openaiadam-are-now-adamw-schedules-are-standard-pytorch-schedules
 
 
-def train(train_loader, device, model, linear, optimizer, scheduler,
+def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
           max_grad_norm, log_interval, epoch):
     model.train()
     linear.train()
@@ -36,8 +36,7 @@ def train(train_loader, device, model, linear, optimizer, scheduler,
 
         loss = F.nll_loss(output, target)
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(
-            list(model.parameters()) + list(linear.parameters()), max_grad_norm)
+        torch.nn.utils.clip_grad_norm_(all_params, max_grad_norm)
         optimizer.step()
         scheduler.step()
 
@@ -128,6 +127,29 @@ def batchify(b):
     return x, tk_type_ids, x_mask, y
 
 
+def get_data(filepath, vocab, sp):
+    data = list()
+    max_seq_len = 0
+    with open(filepath, 'r', encoding='utf-8') as f:
+        for lidx, l in enumerate(f):
+            if 0 == lidx:
+                continue
+            cols = l[:-1].split('\t')
+            # docid = cols[0]
+            doc = cols[1]
+            label = cols[2]
+
+            token_ids = [vocab[t] if t in vocab
+                         else vocab['[UNK]'] for t in sp(doc)]
+
+            data.append([token_ids, int(label)])
+
+            if max_seq_len < len(token_ids):
+                max_seq_len = len(token_ids)
+    print('max_seq_len', max_seq_len)
+    return data
+
+
 def main():
     nsmc_home_dir = 'YOUR_NSMC_DIR'
     train_file = nsmc_home_dir + '/ratings_train.txt'  # 150K
@@ -145,6 +167,8 @@ def main():
     log_interval = 100
     seed = 2019
     num_workers = 2
+    num_classes = 2
+    pooler_out_dim = model.pooler.dense.out_features
 
     torch.manual_seed(seed)
 
@@ -155,50 +179,8 @@ def main():
     tok_path = get_tokenizer()
     sp = SentencepieceTokenizer(tok_path)
 
-    train_data = list()
-    max_seq_len = 0
-    with open(train_file, 'r', encoding='utf-8') as f:
-        for lidx, l in enumerate(f):
-            if 0 == lidx:
-                continue
-            cols = l[:-1].split('\t')
-            # docid = cols[0]
-            doc = cols[1]
-            label = cols[2]
-
-            token_ids = [vocab[t] if t in vocab
-                         else vocab['[UNK]'] for t in sp(doc)]
-
-            train_data.append([token_ids, int(label)])
-
-            if max_seq_len < len(token_ids):
-                max_seq_len = len(token_ids)
-
-    print('train max_seq_len', max_seq_len)
-
-    test_data = list()
-    test_max_seq_len = 0
-    with open(test_file, 'r', encoding='utf-8') as f:
-        for lidx, l in enumerate(f):
-            if 0 == lidx:
-                continue
-            cols = l[:-1].split('\t')
-            # docid = cols[0]
-            doc = cols[1]
-            label = cols[2]
-
-            token_ids = [vocab[t] if t in vocab
-                         else vocab['[UNK]'] for t in sp(doc)]
-
-            test_data.append([token_ids, int(label)])
-
-            if test_max_seq_len < len(token_ids):
-                test_max_seq_len = len(token_ids)
-
-    print('test max_seq_len', test_max_seq_len)
-
     train_loader = torch.utils.data.DataLoader(
-        MovieDataset(train_data),
+        MovieDataset(get_data(train_file, vocab, sp)),
         shuffle=True,
         batch_size=batch_size,
         num_workers=num_workers,
@@ -207,24 +189,24 @@ def main():
     )
 
     test_loader = torch.utils.data.DataLoader(
-        MovieDataset(test_data),
-        # shuffle=True,
+        MovieDataset(get_data(test_file, vocab, sp)),
         batch_size=batch_size,
+        shuffle=False,
         num_workers=num_workers,
         collate_fn=batchify,
         pin_memory=True
     )
 
-    linear = torch.nn.Linear(768, 2).to(device)
+    linear = torch.nn.Linear(pooler_out_dim, num_classes).to(device)
 
-    optimizer = AdamW(list(model.parameters()) + list(linear.parameters()),
-                      lr=lr, correct_bias=False)
+    all_params = list(model.parameters()) + list(linear.parameters())
+    optimizer = AdamW(all_params, lr=lr, correct_bias=False)
     scheduler = WarmupLinearSchedule(optimizer, warmup_steps=num_warmup_steps,
                                      t_total=num_total_steps)
 
     for epoch in range(epochs):
-        train(train_loader, device, model, linear, optimizer, scheduler,
-              max_grad_norm, log_interval, epoch)
+        train(train_loader, device, model, linear, all_params,
+              optimizer, scheduler, max_grad_norm, log_interval, epoch)
         test(test_loader, device, model, linear)
 
 
