@@ -22,4 +22,4 @@ https://github.com/SKTBrain/KoBERT#how-to-install
     * It takes 36 minutes for each training epoch on an NVIDIA GeForce GTX 1070.
 
 * Performance
-    * Accuracy 89.6% (5th epoch) [(KoBERT fine-tuning: 90.1%)](https://github.com/SKTBrain/KoBERT#fine-tuning-performances)
+    * Accuracy 89.55% (5th epoch) [(KoBERT fine-tuning: 90.1%)](https://github.com/SKTBrain/KoBERT#fine-tuning-performances)

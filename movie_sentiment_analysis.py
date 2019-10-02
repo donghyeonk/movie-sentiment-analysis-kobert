@@ -19,7 +19,7 @@ from pytorch_transformers import AdamW, WarmupLinearSchedule
 
 
 def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
-          max_grad_norm, log_interval, epoch):
+          dropout_rate, max_grad_norm, log_interval, epoch):
     model.train()
     linear.train()
     for batch_idx, (input_ids, token_type_ids, input_mask, target) \
@@ -31,7 +31,7 @@ def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
 
         optimizer.zero_grad()
         _, pooled_output = model(input_ids, token_type_ids, input_mask)
-        logits = linear(pooled_output)
+        logits = linear(F.dropout(pooled_output, p=dropout_rate))
         output = F.log_softmax(logits, dim=1)
 
         loss = F.nll_loss(output, target)
@@ -166,7 +166,7 @@ def get_data(filepath, vocab, sp):
 
 
 def main():
-    nsmc_home_dir = 'YOUR_NSMC_DIR'
+    nsmc_home_dir = '/media/donghyeon/f7c53837-2156-4793-b2b1-4b0578dffef1/nlp/nsmc'
     train_file = nsmc_home_dir + '/ratings_train.txt'  # 150K
     test_file = nsmc_home_dir + '/ratings_test.txt'  # 50K
 
@@ -176,6 +176,7 @@ def main():
     lr = 5e-5
     batch_size = 16
     epochs = 5
+    dropout_rate = 0.1
     max_grad_norm = 1.0
     num_total_steps = math.ceil(150000 / batch_size) * epochs
     num_warmup_steps = num_total_steps // 10
@@ -221,7 +222,8 @@ def main():
 
     for epoch in range(epochs):
         train(train_loader, device, model, linear, all_params,
-              optimizer, scheduler, max_grad_norm, log_interval, epoch)
+              optimizer, scheduler, dropout_rate, max_grad_norm,
+              log_interval, epoch)
         print(datetime.now(), 'Testing...')
         test(test_loader, device, model, linear)
 
