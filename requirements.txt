@@ -1,4 +1,4 @@
-gluonnlp
-kobert
-pytorch-transformers
-torch
+gluonnlp>=0.6.0
+kobert>=0.1.1
+transformers>=2.2.2
+torch>=1.1.0

@@ -3,7 +3,7 @@
 * Main components
     * [KoBERT of SKTBrain](https://github.com/SKTBrain/KoBERT)
     * [PyTorch](https://pytorch.org/)
-    * [pytorch-transformers of huggingface](https://github.com/huggingface/pytorch-transformers)
+    * [transformers of huggingface](https://github.com/huggingface/transformers)
 
 * Install KoBERT
 https://github.com/SKTBrain/KoBERT#how-to-install

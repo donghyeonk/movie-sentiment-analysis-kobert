@@ -6,16 +6,16 @@ import math
 from gluonnlp.data import SentencepieceTokenizer
 from kobert.pytorch_kobert import get_pytorch_kobert_model
 from kobert.utils import get_tokenizer
-from pytorch_transformers import AdamW, WarmupLinearSchedule
+from transformers import AdamW, get_linear_schedule_with_warmup
 
 # Dataset
 # https://github.com/e9t/nsmc.git
 
-# BERT Model
+# BERT model
 # https://github.com/SKTBrain/KoBERT
 
 # Optimizer
-# https://github.com/huggingface/pytorch-transformers#optimizers-bertadam--openaiadam-are-now-adamw-schedules-are-standard-pytorch-schedules
+# https://huggingface.co/transformers/migration.html#optimizers-bertadam-openaiadam-are-now-adamw-schedules-are-standard-pytorch-schedules
 
 
 def train(train_loader, device, model, linear, all_params, optimizer, scheduler,
@@ -166,7 +166,7 @@ def get_data(filepath, vocab, sp):
 
 
 def main():
-    nsmc_home_dir = '/media/donghyeon/f7c53837-2156-4793-b2b1-4b0578dffef1/nlp/nsmc'
+    nsmc_home_dir = 'NSMC_DIR'
     train_file = nsmc_home_dir + '/ratings_train.txt'  # 150K
     test_file = nsmc_home_dir + '/ratings_test.txt'  # 50K
 
@@ -217,9 +217,9 @@ def main():
 
     all_params = list(model.parameters()) + list(linear.parameters())
     optimizer = AdamW(all_params, lr=lr, correct_bias=False)
-    scheduler = WarmupLinearSchedule(optimizer, warmup_steps=num_warmup_steps,
-                                     t_total=num_total_steps)
-
+    scheduler = get_linear_schedule_with_warmup(
+        optimizer, num_warmup_steps=num_warmup_steps,
+        num_training_steps=num_total_steps)
     for epoch in range(epochs):
         train(train_loader, device, model, linear, all_params,
               optimizer, scheduler, dropout_rate, max_grad_norm,
